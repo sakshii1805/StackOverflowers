@@ -295,6 +295,56 @@ export const INVESTIGATION_TIMELINES = {
   "INV-03": [{ time: "14:10", description: "Routine baseline check opened" }],
 };
 
+/* ---------- OSINT ---------- */
+
+const OSINT_SOURCE_TYPES = [
+  { name: "Public Social Post", credibility: 55 },
+  { name: "News Aggregator", credibility: 82 },
+  { name: "Public Records Index", credibility: 91 },
+  { name: "Forum / Message Board", credibility: 38 },
+  { name: "Marketplace Listing Archive", credibility: 64 },
+  { name: "Satellite Imagery Provider", credibility: 88 },
+];
+
+export const OSINT_SOURCES = OSINT_SOURCE_TYPES.map((s, i) => ({
+  id: `SRC-${i + 1}`,
+  name: s.name,
+  credibility: s.credibility,
+  recordsIndexed: randInt(120, 4200),
+}));
+
+const OSINT_SNIPPET_TEMPLATES = [
+  "Mentioned in connection with recent activity near {sector}.",
+  "Referenced alongside another tracked entity in a public post.",
+  "Appears in an indexed public record dated within the last quarter.",
+  "Flagged by keyword monitoring for association with a tracked location.",
+  "Cross-referenced against a known cluster with moderate confidence.",
+  "Noted in an archived listing with partial identifying details.",
+];
+
+const OSINT_COUNT = 60;
+
+function getSectorNameSafe(sectorId) {
+  const s = SECTORS.find((sec) => sec.id === sectorId);
+  return s ? s.name.replace(/^Sector \d+ — /, "") : "an unspecified sector";
+}
+
+export const OSINT_MENTIONS = Array.from({ length: OSINT_COUNT }, (_, i) => {
+  const entity = pick(ENTITIES);
+  const source = pick(OSINT_SOURCES);
+  const sector = getSectorNameSafe(entity.sectorId);
+  return {
+    id: `OSN-${i + 1}`,
+    entityId: entity.id,
+    sourceId: source.id,
+    snippet: pick(OSINT_SNIPPET_TEMPLATES).replace("{sector}", sector),
+    confidence: randInt(30, 97),
+    timestamp: `2026-0${randInt(3, 7)}-${String(randInt(1, 28)).padStart(2, "0")}T${String(
+      randInt(6, 22)
+    ).padStart(2, "0")}:${String(randInt(0, 59)).padStart(2, "0")}:00Z`,
+  };
+}).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
+
 /* ---------- selectors ---------- */
 
 export const getEntityById = (id) => ENTITIES.find((e) => e.id === id);
@@ -307,6 +357,11 @@ export const getEntitiesBySector = (sectorId) => bySector(sectorId);
 export const getAlertsBySector = (sectorId) => ALERTS.filter((a) => a.sectorId === sectorId);
 
 export const getSectorById = (id) => SECTORS.find((s) => s.id === id);
+
+export const getOsintMentionsForEntity = (entityId) =>
+  OSINT_MENTIONS.filter((m) => m.entityId === entityId);
+
+export const getSourceById = (id) => OSINT_SOURCES.find((s) => s.id === id);
 
 export const DATASET_SUMMARY = {
   totalEntities: ENTITIES.length,

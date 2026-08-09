@@ -363,6 +363,51 @@ export const getOsintMentionsForEntity = (entityId) =>
 
 export const getSourceById = (id) => OSINT_SOURCES.find((s) => s.id === id);
 
+export const OSINT_FEEDS = OSINT_MENTIONS.map((m) => ({
+  id: m.id,
+  title: m.snippet,
+  source: m.sourceId,
+  category: "public_records",
+  confidence: m.confidence,
+  severity: m.confidence >= 80 ? "critical" : m.confidence >= 60 ? "high" : "medium",
+  relatedEntityId: m.entityId,
+  timestamp: m.timestamp,
+  status: m.confidence >= 70 ? "actionable" : "new",
+}));
+
+export const REPORTS = [
+  {
+    id: "REP-01",
+    title: "Sector 04 Trafficking Route Analysis",
+    type: "network_analysis",
+    status: "completed",
+    createdAt: "2026-07-28",
+    summary: "Comprehensive graph analysis of entity clusters operating in Sector 04 corridor.",
+    entityCount: 14,
+    alertCount: 5,
+  },
+  {
+    id: "REP-02",
+    title: "Precursor Chemical Supply Linkage",
+    type: "anomaly_report",
+    status: "completed",
+    createdAt: "2026-08-02",
+    summary: "Anomalous purchasing patterns identified across chemical suppliers in Sector 08.",
+    entityCount: 8,
+    alertCount: 3,
+  },
+  {
+    id: "REP-03",
+    title: "Financial Intermediary Network Dossier",
+    type: "entity_dossier",
+    status: "in_progress",
+    createdAt: "2026-08-06",
+    summary: "Investigation into money laundering entities and offshore account networks.",
+    entityCount: 12,
+    alertCount: 4,
+  },
+];
+
 export const DATASET_SUMMARY = {
   totalEntities: ENTITIES.length,
   totalRelationships: RELATIONSHIPS.length,

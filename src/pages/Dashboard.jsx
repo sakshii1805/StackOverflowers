@@ -1,4 +1,4 @@
-// src/pages/Dashboard.jsx
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -18,6 +18,7 @@ import {
   FolderKanban,
   AlertTriangle,
 } from "lucide-react";
+import { getDashboardSummary } from "../lib/api";
 import { SECTORS, DATASET_SUMMARY } from "../lib/mockData";
 
 const SUMMARY_CARDS = [
@@ -62,6 +63,23 @@ function ChartTooltip({ active, payload, label }) {
 }
 
 export default function Dashboard() {
+  const [summaryData, setSummaryData] = useState(null);
+
+  useEffect(() => {
+    getDashboardSummary().then((data) => {
+      if (data && data.stats) setSummaryData(data);
+    });
+  }, []);
+
+  const stats = summaryData?.stats || {
+    totalEntities: DATASET_SUMMARY.totalEntities,
+    totalRelationships: DATASET_SUMMARY.totalRelationships,
+    totalSectors: DATASET_SUMMARY.totalSectors,
+    totalAlerts: DATASET_SUMMARY.totalAlerts,
+    activeInvestigations: DATASET_SUMMARY.activeInvestigations,
+    totalAnomalies: DATASET_SUMMARY.totalAnomalies,
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Summary cards */}
@@ -81,7 +99,7 @@ export default function Dashboard() {
                 <Icon size={14} />
               </span>
             </div>
-            <span className="text-[26px] font-semibold leading-none">{DATASET_SUMMARY[key]}</span>
+            <span className="text-[26px] font-semibold leading-none">{stats[key] ?? DATASET_SUMMARY[key]}</span>
           </div>
         ))}
       </div>

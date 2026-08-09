@@ -1,8 +1,7 @@
-// src/pages/NetworkIntelligence.jsx
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { Share2, MousePointerClick, Move, ZoomIn } from "lucide-react";
-import { ENTITIES, RELATIONSHIPS, SECTORS, getEntityById } from "../lib/mockData";
+import { getNetworkGraph } from "../lib/api";
 
 const TYPE_COLORS = {
   person: "#39ff88",
@@ -24,37 +23,59 @@ export default function NetworkIntelligence() {
   const fgRef = useRef();
   const [selected, setSelected] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
+  const [liveNodes, setLiveNodes] = useState([]);
+  const [liveLinks, setLiveLinks] = useState([]);
+
+  const fetchGraph = () => {
+    getNetworkGraph().then((data) => {
+      if (data && data.nodes && data.links) {
+        setLiveNodes(data.nodes);
+        setLiveLinks(data.links);
+      }
+    });
+  };
+
+  useEffect(() => {
+    fetchGraph();
+    window.addEventListener("narcoscope_data_updated", fetchGraph);
+    return () => {
+      window.removeEventListener("narcoscope_data_updated", fetchGraph);
+    };
+  }, []);
 
   const graphData = useMemo(
     () => ({
-      nodes: ENTITIES.map((e) => ({
+      nodes: liveNodes.map((e) => ({
         id: e.id,
-        label: e.label,
-        type: e.type,
-        sectorId: e.sectorId,
-        connections: e.connections,
-        riskIndicator: e.riskIndicator,
+        label: e.label || e.name || e.id,
+        type: e.type || e.entity_type || "person",
+        sectorId: e.sectorId || "S01",
+        connections: e.connections || 1,
+        riskIndicator: e.riskIndicator ?? e.risk_score ?? 50,
       })),
-      links: RELATIONSHIPS.map((r) => ({
-        source: r.source,
-        target: r.target,
-        type: r.type,
-        label: r.label,
+      links: liveLinks.map((r) => ({
+        source: typeof r.source === "object" ? r.source.id : r.source,
+        target: typeof r.target === "object" ? r.target.id : r.target,
+        type: r.type || "associated",
+        label: r.label || r.type || "associated",
       })),
     }),
-    []
+    [liveNodes, liveLinks]
   );
 
   // Densest sector, for the context stat
   const densestSector = useMemo(() => {
     const counts = {};
-    for (const e of ENTITIES) counts[e.sectorId] = (counts[e.sectorId] ?? 0) + 1;
-    const topId = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-    return SECTORS.find((s) => s.id === topId);
-  }, []);
+    for (const e of liveNodes) {
+      if (!e.sectorId) continue;
+      counts[e.sectorId] = (counts[e.sectorId] ?? 0) + 1;
+    }
+    const topId = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    return topId ? { id: topId } : null;
+  }, [liveNodes]);
 
   const handleNodeClick = (node) => {
-    setSelected(node ? getEntityById(node.id) : null);
+    setSelected(node ? liveNodes.find((n) => n.id === node.id) ?? node : null);
     if (node && fgRef.current) {
       fgRef.current.centerAt(node.x, node.y, 600);
       fgRef.current.zoom(3, 600);
@@ -68,9 +89,9 @@ export default function NetworkIntelligence() {
         <div className="flex items-center gap-2 text-[12px] text-text-dim">
           <Share2 size={13} className="text-accent-neon" />
           <span>
-            <strong className="text-text font-mono">{ENTITIES.length}</strong> entities linked by{" "}
-            <strong className="text-text font-mono">{RELATIONSHIPS.length}</strong> relationships
-            across <strong className="text-text font-mono">{SECTORS.length}</strong> sectors —
+            <strong className="text-text font-mono">{liveNodes.length}</strong> entities linked by{" "}
+            <strong className="text-text font-mono">{liveLinks.length}</strong> relationships
+            across <strong className="text-text font-mono">{new Set(liveNodes.map((n) => n.sectorId)).size}</strong> sectors —
             node position reflects connection strength, not geography.
           </span>
         </div>
@@ -95,7 +116,7 @@ export default function NetworkIntelligence() {
               <div className="eyebrow">Relationship Graph</div>
               {densestSector && (
                 <p className="text-[10.5px] text-text-faint mt-0.5">
-                  Densest cluster: {densestSector.name.replace(/^Sector \d+ — /, "")} ({densestSector.id})
+                  Densest cluster: {densestSector.id}
                 </p>
               )}
             </div>
@@ -138,7 +159,7 @@ export default function NetworkIntelligence() {
           <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 bg-bg/70 backdrop-blur px-3 py-2 rounded-lg border border-border">
             <div className="text-[9.5px] font-mono text-text-faint uppercase mb-0.5">Entity Type</div>
             {Object.entries(TYPE_COLORS).map(([type, color]) => {
-              const count = ENTITIES.filter((e) => e.type === type).length;
+              const count = liveNodes.filter((e) => e.type === type).length;
               return (
                 <div key={type} className="flex items-center gap-2 text-[11px] text-text-dim">
                   <span className="w-2 h-2 rounded-full" style={{ background: color }} />

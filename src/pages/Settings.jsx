@@ -10,7 +10,15 @@ export default function SettingsPage() {
   const [glowEffects, setGlowEffects] = useState(true);
 
   const [anomalyThreshold, setAnomalyThreshold] = useState(20);
-  const [refreshRate, setRefreshRate] = useState("30 seconds");
+  const [refreshRate, setRefreshRateState] = useState(
+    () => localStorage.getItem("narcoscope_refresh_rate") || "30 seconds"
+  );
+
+  const handleRefreshRateChange = (rate) => {
+    setRefreshRateState(rate);
+    localStorage.setItem("narcoscope_refresh_rate", rate);
+    window.dispatchEvent(new Event("narcoscope_settings_updated"));
+  };
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
@@ -71,7 +79,7 @@ export default function SettingsPage() {
           <span className="text-[12.5px]">Refresh rate</span>
           <select
             value={refreshRate}
-            onChange={(e) => setRefreshRate(e.target.value)}
+            onChange={(e) => handleRefreshRateChange(e.target.value)}
             className="text-[12px] bg-surface-2 border border-border rounded-lg px-2.5 py-2 text-text-dim outline-none w-48"
           >
             {REFRESH_OPTIONS.map((r) => (
@@ -81,7 +89,7 @@ export default function SettingsPage() {
             ))}
           </select>
           <p className="text-[11px] text-text-faint">
-            How often the intelligence engine re-evaluates sector activity.
+            How often the intelligence engine re-evaluates sector activity. Active mode: <span className="text-accent-neon font-mono">{refreshRate}</span>.
           </p>
         </div>
       </div>

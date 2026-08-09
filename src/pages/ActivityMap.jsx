@@ -1,7 +1,7 @@
-// src/pages/ActivityMap.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertTriangle, Users } from "lucide-react";
-import { SECTORS, getEntitiesBySector, getAlertsBySector } from "../lib/mockData";
+import { getSectors, getEntities, getAlerts } from "../lib/api";
+import { SECTORS as fallbackSectors } from "../lib/mockData";
 
 function heatColor(score) {
   const alpha = 0.12 + score * 0.55;
@@ -15,14 +15,56 @@ function heatBorder(score) {
 
 export default function ActivityMap() {
   const [selectedId, setSelectedId] = useState(null);
-  const selected = SECTORS.find((s) => s.id === selectedId) ?? null;
+  const [sectorsData, setSectorsData] = useState(fallbackSectors);
+  const [sectorEntities, setSectorEntities] = useState([]);
+  const [sectorAlerts, setSectorAlerts] = useState([]);
+
+  const fetchSectors = () => {
+    getSectors().then((data) => {
+      if (Array.isArray(data)) setSectorsData(data);
+    });
+  };
+
+  useEffect(() => {
+    fetchSectors();
+    window.addEventListener("narcoscope_data_updated", fetchSectors);
+    return () => {
+      window.removeEventListener("narcoscope_data_updated", fetchSectors);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSectorEntities([]);
+      setSectorAlerts([]);
+      return;
+    }
+
+    getEntities().then((data) => {
+      if (Array.isArray(data)) {
+        setSectorEntities(data.filter((e) => e.sectorId === selectedId || e.sector_id === selectedId));
+      } else {
+        setSectorEntities([]);
+      }
+    });
+
+    getAlerts().then((data) => {
+      if (Array.isArray(data)) {
+        setSectorAlerts(data.filter((a) => a.sectorId === selectedId || a.sector_id === selectedId));
+      } else {
+        setSectorAlerts([]);
+      }
+    });
+  }, [selectedId]);
+
+  const selected = sectorsData.find((s) => s.id === selectedId) ?? null;
 
   return (
     <div className="flex gap-4 h-[calc(100vh-140px)]">
       <div className="glass-panel flex-1 p-6 overflow-y-auto">
         <div className="eyebrow mb-4">Sector Activity Map</div>
         <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-          {SECTORS.map((s) => {
+          {sectorsData.map((s) => {
             const isSelected = s.id === selectedId;
             return (
               <button
@@ -85,7 +127,7 @@ export default function ActivityMap() {
                 <Users size={12} /> Entities in Sector
               </div>
               <div className="flex flex-col gap-1">
-                {getEntitiesBySector(selected.id).slice(0, 6).map((e) => (
+                {sectorEntities.slice(0, 6).map((e) => (
                   <div key={e.id} className="text-[12px] text-text-dim flex items-center justify-between">
                     <span>{e.label}</span>
                     <span className="text-text-faint capitalize">{e.type}</span>
@@ -98,9 +140,9 @@ export default function ActivityMap() {
               <div className="eyebrow mb-2 flex items-center gap-1.5">
                 <AlertTriangle size={12} /> Alerts
               </div>
-              {getAlertsBySector(selected.id).length > 0 ? (
+              {sectorAlerts.length > 0 ? (
                 <div className="flex flex-col gap-1">
-                  {getAlertsBySector(selected.id).map((a) => (
+                  {sectorAlerts.map((a) => (
                     <div key={a.id} className="text-[12px] text-text-dim">
                       {a.title}
                     </div>

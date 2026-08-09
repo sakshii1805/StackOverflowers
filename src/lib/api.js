@@ -78,6 +78,21 @@ export async function getAlerts() {
   return fetchWithFallback("/alerts", () => mockData.ALERTS);
 }
 
+export async function updateAlertStatus(alertId, newStatus) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/alerts/${alertId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`[API] Alert update fallback: ${err.message}`);
+    return { id: alertId, status: newStatus, message: "Status updated in local session." };
+  }
+}
+
 // ── Anomalies ─────────────────────────────────────────────────────────────
 export async function getAnomalies() {
   return fetchWithFallback("/anomalies", () => mockData.ANOMALIES);
@@ -135,6 +150,92 @@ export async function predictRouteRisk(originSector, destinationSector) {
       recommended_action: "Increase surveillance and deploy mobile checkpoints",
     };
   }
+}
+
+export async function getPublicOpenData() {
+  return fetchWithFallback("/osint/public-data", () => [
+    {
+      id: "UNODC-PUB-001",
+      title: "International Precursor Chemical Seizure Trend — Western Seaboard",
+      substance: "Ephedrine / Precursor Derivatives",
+      location: "Port Freeport Corridor",
+      event_date: "2026-06-14",
+      source: "Synthetic Fallback Data",
+      classification: "Synthetic Fallback Data",
+      is_real_data: false,
+    },
+    {
+      id: "FDA-PUB-002",
+      title: "Regulatory Enforcement Action — Precursor Substance Diversion",
+      substance: "Pharmaceutical Chemical Compound",
+      location: "Sector 08 Public District",
+      event_date: "2026-07-20",
+      source: "Synthetic Fallback Data",
+      classification: "Synthetic Fallback Data",
+      is_real_data: false,
+    },
+  ]);
+}
+
+export async function refreshRealtimeData() {
+  return runIngestion();
+}
+
+export async function runIngestion() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/ingestion/run`, { method: "POST" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`[API] Ingestion pipeline fallback: ${err.message}`);
+    return {
+      status: "fallback",
+      source: "OpenFDA Drug Enforcement Open API",
+      reason: err.message,
+      fallback_used: true,
+      records_fetched: 15,
+      records_inserted: 0,
+      duplicates: 15,
+      completed_at: new Date().toISOString(),
+    };
+  }
+}
+
+export async function getSystemStatus() {
+  return fetchWithFallback("/system/status", () => ({
+    status: "online",
+    mode: "FALLBACK",
+    database: "disconnected",
+    ml_engine: "ready",
+    neo4j: "sqlite_fallback",
+    data_sources: [
+      {
+        source_id: "openfda_enforcement",
+        source_name: "OpenFDA Drug Enforcement Open API",
+        source_type: "PUBLIC_DATA",
+        status: "FALLBACK",
+        last_successful_sync: new Date().toISOString(),
+        update_frequency: "Periodic / Lawful Open API",
+        record_count: 15,
+        data_classification: "Public / Historical Data",
+      },
+    ],
+  }));
+}
+
+export async function getDataClassification() {
+  return fetchWithFallback("/osint/data-classification", () => ({
+    real_public_sources: [
+      { name: "OpenFDA Drug Enforcement API", status: "Active / Lawful Public API" },
+      { name: "UNODC Public Data Portal", status: "Active / Historical Trends" },
+    ],
+    data_classification_policy: {
+      synthetic_entities: "NARCOSCOPE Fictional Entities (Synthetic / Demonstration)",
+      synthetic_relationships: "Fictional Graph Network (Synthetic / Demonstration)",
+      ml_indicators: "scikit-learn IsolationForest & TF-IDF (ML Analytics)",
+      public_datasets: "UNODC / OpenFDA Public Seizures (Public / Historical Data)",
+    },
+  }));
 }
 
 // ── Investigations ────────────────────────────────────────────────────────

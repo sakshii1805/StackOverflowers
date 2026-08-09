@@ -1,12 +1,7 @@
-// src/pages/Investigations.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, FolderKanban, Clock } from "lucide-react";
-import {
-  INVESTIGATIONS,
-  INVESTIGATION_TIMELINES,
-  getEntityById,
-  ALERTS,
-} from "../lib/mockData";
+import { getInvestigations, getEntities, getAlerts } from "../lib/api";
+import { INVESTIGATION_TIMELINES } from "../lib/mockData";
 
 const STATUS_STYLES = {
   active: "bg-accent-dim text-accent-neon border-accent-neon/30",
@@ -22,20 +17,45 @@ const PRIORITY_STYLES = {
 
 export default function Investigations() {
   const [expandedId, setExpandedId] = useState(null);
+  const [investigationsData, setInvestigationsData] = useState([]);
+  const [entitiesData, setEntitiesData] = useState([]);
+  const [alertsData, setAlertsData] = useState([]);
+
+  const fetchAll = () => {
+    getInvestigations().then((data) => {
+      if (Array.isArray(data)) setInvestigationsData(data);
+    });
+
+    getEntities().then((data) => {
+      if (Array.isArray(data)) setEntitiesData(data);
+    });
+
+    getAlerts().then((data) => {
+      if (Array.isArray(data)) setAlertsData(data);
+    });
+  };
+
+  useEffect(() => {
+    fetchAll();
+    window.addEventListener("narcoscope_data_updated", fetchAll);
+    return () => {
+      window.removeEventListener("narcoscope_data_updated", fetchAll);
+    };
+  }, []);
 
   const toggle = (id) => setExpandedId((prev) => (prev === id ? null : id));
 
   return (
     <div className="flex flex-col gap-4">
       <div className="eyebrow flex items-center gap-1.5">
-        <FolderKanban size={13} /> Investigations ({INVESTIGATIONS.length})
+        <FolderKanban size={13} /> Investigations ({investigationsData.length})
       </div>
 
       <div className="flex flex-col gap-3">
-        {INVESTIGATIONS.map((inv) => {
+        {investigationsData.map((inv) => {
           const isExpanded = expandedId === inv.id;
-          const timeline = INVESTIGATION_TIMELINES[inv.id] ?? [];
-          const relatedAlerts = ALERTS.filter((a) => inv.alertIds.includes(a.id));
+          const timeline = INVESTIGATION_TIMELINES[inv.id] ?? inv.timeline ?? [];
+          const relatedAlerts = alertsData.filter((a) => (inv.alertIds ?? inv.alert_ids ?? []).includes(a.id));
 
           return (
             <div key={inv.id} className="glass-panel p-5">
@@ -89,8 +109,8 @@ export default function Investigations() {
                   <div>
                     <div className="eyebrow mb-2">Related Entities</div>
                     <div className="flex flex-wrap gap-1.5">
-                      {inv.entityIds.map((eid) => {
-                        const e = getEntityById(eid);
+                      {(inv.entityIds ?? inv.entity_ids ?? []).map((eid) => {
+                        const e = entitiesData.find((entity) => entity.id === eid);
                         return (
                           <span
                             key={eid}

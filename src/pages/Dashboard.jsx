@@ -30,17 +30,17 @@ const SUMMARY_CARDS = [
   { key: "totalAnomalies", label: "Anomalies", icon: AlertTriangle, tint: "#f5d76e" },
 ];
 
-// Sector activity vs baseline, for the bar chart
-const sectorBarData = SECTORS.map((s) => ({
+// Sector activity vs baseline fallback for the bar chart
+const DEFAULT_SECTOR_BAR_DATA = SECTORS.map((s) => ({
   name: s.id,
   fullName: s.name.replace(/^Sector \d+ — /, ""),
   baseline: s.baseline,
   observed: s.activityCount,
 }));
 
-// Aggregate network-wide trend across all sectors, for the line chart
+// Aggregate network-wide trend fallback for the line chart
 const monthLabels = ["M1", "M2", "M3", "M4", "M5", "M6"];
-const trendLineData = monthLabels.map((month, i) => ({
+const DEFAULT_TREND_LINE_DATA = monthLabels.map((month, i) => ({
   month,
   activity: SECTORS.reduce((sum, s) => sum + s.trend[i], 0),
 }));
@@ -65,10 +65,18 @@ function ChartTooltip({ active, payload, label }) {
 export default function Dashboard() {
   const [summaryData, setSummaryData] = useState(null);
 
-  useEffect(() => {
+  const fetchDashboard = () => {
     getDashboardSummary().then((data) => {
       if (data && data.stats) setSummaryData(data);
     });
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+    window.addEventListener("narcoscope_data_updated", fetchDashboard);
+    return () => {
+      window.removeEventListener("narcoscope_data_updated", fetchDashboard);
+    };
   }, []);
 
   const stats = summaryData?.stats || {
@@ -79,6 +87,9 @@ export default function Dashboard() {
     activeInvestigations: DATASET_SUMMARY.activeInvestigations,
     totalAnomalies: DATASET_SUMMARY.totalAnomalies,
   };
+
+  const sectorBarData = summaryData?.sector_bar_data || DEFAULT_SECTOR_BAR_DATA;
+  const trendLineData = summaryData?.trend_line_data || DEFAULT_TREND_LINE_DATA;
 
   return (
     <div className="flex flex-col gap-6">

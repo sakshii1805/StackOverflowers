@@ -1,6 +1,6 @@
-// src/pages/Alerts.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, ChevronRight } from "lucide-react";
+import { getAlerts } from "../lib/api";
 import { ALERTS as INITIAL_ALERTS, getSectorById, getEntityById } from "../lib/mockData";
 
 const SEVERITY_STYLES = {
@@ -24,6 +24,20 @@ const NEXT_STATUS = {
 
 export default function Alerts() {
   const [alerts, setAlerts] = useState(INITIAL_ALERTS);
+
+  const fetchAlerts = () => {
+    getAlerts().then((data) => {
+      if (Array.isArray(data)) setAlerts(data);
+    });
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+    window.addEventListener("narcoscope_data_updated", fetchAlerts);
+    return () => {
+      window.removeEventListener("narcoscope_data_updated", fetchAlerts);
+    };
+  }, []);
 
   const advanceStatus = (id) => {
     setAlerts((prev) =>

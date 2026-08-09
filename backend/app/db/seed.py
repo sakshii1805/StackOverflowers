@@ -45,13 +45,13 @@ def _ago(**kwargs) -> datetime:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _create_entities(db: Session) -> dict[str, Entity]:
-    """Create ~15 synthetic entities and return a name→Entity dict."""
+    """Create ~140 synthetic entities across all sectors and entity types."""
     entities_data = [
-        # ── Persons ─────────────────────────────────────────────────
+        # ── Core Anchor Persons ───────────────────────────────────────
         {
             "name": "Carlos 'El Fantasma' Reyes",
             "entity_type": EntityType.person,
-            "description": "[SYNTHETIC] Suspected cartel leader operating in the western corridor. Multiple aliases detected across intercepted communications.",
+            "description": "[SYNTHETIC] Suspected cartel leader operating in the western corridor. Multiple aliases detected.",
             "risk_score": 92.0,
             "status": EntityStatus.under_investigation,
             "aliases": ["El Fantasma", "C. Reyes", "Ghost"],
@@ -62,7 +62,7 @@ def _create_entities(db: Session) -> dict[str, Entity]:
         {
             "name": "Maria Santos Delgado",
             "entity_type": EntityType.person,
-            "description": "[SYNTHETIC] Known courier and logistics coordinator. Linked to multiple cross-border shipments.",
+            "description": "[SYNTHETIC] Known courier and logistics coordinator. Linked to cross-border shipments.",
             "risk_score": 78.5,
             "status": EntityStatus.active,
             "aliases": ["La Paloma", "M. Santos"],
@@ -73,7 +73,7 @@ def _create_entities(db: Session) -> dict[str, Entity]:
         {
             "name": "Viktor Petrov",
             "entity_type": EntityType.person,
-            "description": "[SYNTHETIC] Financial intermediary with connections to offshore accounts. Suspected money laundering.",
+            "description": "[SYNTHETIC] Financial intermediary with connections to offshore accounts. Money laundering.",
             "risk_score": 85.0,
             "status": EntityStatus.under_investigation,
             "aliases": ["V. Petrov", "The Banker"],
@@ -84,7 +84,7 @@ def _create_entities(db: Session) -> dict[str, Entity]:
         {
             "name": "Diego Fuentes",
             "entity_type": EntityType.person,
-            "description": "[SYNTHETIC] Street-level distributor turned mid-level coordinator. Rapid rise through organization.",
+            "description": "[SYNTHETIC] Street-level distributor turned mid-level coordinator. Rapid organization rise.",
             "risk_score": 65.0,
             "status": EntityStatus.active,
             "aliases": ["El Rapido"],
@@ -104,25 +104,13 @@ def _create_entities(db: Session) -> dict[str, Entity]:
             "last_seen": _ago(days=15),
         },
         {
-            "name": "James 'Jimmy' O'Brien",
-            "entity_type": EntityType.person,
-            "description": "[SYNTHETIC] Cleared after investigation. Former associate, now cooperating witness.",
-            "risk_score": 12.0,
-            "status": EntityStatus.cleared,
-            "aliases": ["Jimmy O"],
-            "metadata_": {},
-            "first_seen": _ago(days=600),
-            "last_seen": _ago(days=90),
-        },
-        # ── Organizations ───────────────────────────────────────────
-        {
             "name": "Solaris Trading Group",
             "entity_type": EntityType.organization,
-            "description": "[SYNTHETIC] Shell company suspected of laundering proceeds through import/export operations.",
+            "description": "[SYNTHETIC] Shell company suspected of laundering proceeds through import/export.",
             "risk_score": 88.0,
             "status": EntityStatus.under_investigation,
             "aliases": ["Solaris TG", "STG Holdings"],
-            "metadata_": {"registered_country": "Synthetic-Country-E", "industry": "Import/Export"},
+            "metadata_": {"industry": "Import/Export"},
             "first_seen": _ago(days=450),
             "last_seen": _ago(days=3),
         },
@@ -133,79 +121,9 @@ def _create_entities(db: Session) -> dict[str, Entity]:
             "risk_score": 97.0,
             "status": EntityStatus.under_investigation,
             "aliases": ["COC", "Western Corridor"],
-            "metadata_": {"estimated_members": "200-500", "primary_product": "Synthetic substances"},
+            "metadata_": {"primary_product": "Synthetic substances"},
             "first_seen": _ago(days=1095),
             "last_seen": _ago(days=1),
-        },
-        # ── Vehicles ────────────────────────────────────────────────
-        {
-            "name": "White Cargo Van — SYN-4821",
-            "entity_type": EntityType.vehicle,
-            "description": "[SYNTHETIC] Cargo van spotted at multiple seizure locations. Registered to a shell company.",
-            "risk_score": 55.0,
-            "status": EntityStatus.active,
-            "aliases": [],
-            "metadata_": {"make": "Generic", "model": "Cargo Van", "plate": "SYN-4821"},
-            "first_seen": _ago(days=120),
-            "last_seen": _ago(days=8),
-        },
-        # ── Phones ──────────────────────────────────────────────────
-        {
-            "name": "Burner Phone +1-555-0147",
-            "entity_type": EntityType.phone,
-            "description": "[SYNTHETIC] Prepaid device linked to encrypted communications between El Fantasma and Solaris TG.",
-            "risk_score": 60.0,
-            "status": EntityStatus.active,
-            "aliases": [],
-            "metadata_": {"carrier": "Synthetic Telecom", "imei": "000000000000000"},
-            "first_seen": _ago(days=60),
-            "last_seen": _ago(days=4),
-        },
-        # ── Locations ───────────────────────────────────────────────
-        {
-            "name": "Warehouse District — Port Ficticio",
-            "entity_type": EntityType.location,
-            "description": "[SYNTHETIC] Industrial zone near port. Multiple surveillance reports of late-night cargo activity.",
-            "risk_score": 72.0,
-            "status": EntityStatus.active,
-            "aliases": ["Zona Industrial PF"],
-            "metadata_": {"latitude": 25.6866, "longitude": -100.3161, "city": "Port Ficticio"},
-            "first_seen": _ago(days=300),
-            "last_seen": _ago(days=6),
-        },
-        {
-            "name": "Safe House — Colonia Verde",
-            "entity_type": EntityType.location,
-            "description": "[SYNTHETIC] Residential property used as a coordination point. Utility bills paid by Solaris TG.",
-            "risk_score": 68.0,
-            "status": EntityStatus.active,
-            "aliases": [],
-            "metadata_": {"latitude": 20.6597, "longitude": -103.3496, "city": "Colonia Verde"},
-            "first_seen": _ago(days=180),
-            "last_seen": _ago(days=12),
-        },
-        # ── Financial accounts ──────────────────────────────────────
-        {
-            "name": "Offshore Account — SYNBANK-7743",
-            "entity_type": EntityType.financial_account,
-            "description": "[SYNTHETIC] Offshore bank account receiving wire transfers from Solaris TG. Flagged by financial intelligence.",
-            "risk_score": 82.0,
-            "status": EntityStatus.under_investigation,
-            "aliases": ["SYNBANK-7743"],
-            "metadata_": {"bank": "Synthetic International Bank", "country": "Synthetic-Country-F"},
-            "first_seen": _ago(days=350),
-            "last_seen": _ago(days=20),
-        },
-        {
-            "name": "Crypto Wallet — 0xSYN...DEMO",
-            "entity_type": EntityType.financial_account,
-            "description": "[SYNTHETIC] Cryptocurrency wallet used for layering transactions. Unusual volume spikes detected.",
-            "risk_score": 75.0,
-            "status": EntityStatus.active,
-            "aliases": ["0xSYNDEMO"],
-            "metadata_": {"blockchain": "Synthetic Chain", "total_txns": 347},
-            "first_seen": _ago(days=150),
-            "last_seen": _ago(days=3),
         },
         {
             "name": "Rosa Medina Castillo",
@@ -218,7 +136,165 @@ def _create_entities(db: Session) -> dict[str, Entity]:
             "first_seen": _ago(days=250),
             "last_seen": _ago(days=7),
         },
+        {
+            "name": "James 'Jimmy' O'Brien",
+            "entity_type": EntityType.person,
+            "description": "[SYNTHETIC] Cleared after investigation. Former associate, now cooperating witness.",
+            "risk_score": 12.0,
+            "status": EntityStatus.cleared,
+            "aliases": ["Jimmy O"],
+            "metadata_": {},
+            "first_seen": _ago(days=600),
+            "last_seen": _ago(days=90),
+        },
+        {
+            "name": "White Cargo Van — SYN-4821",
+            "entity_type": EntityType.vehicle,
+            "description": "[SYNTHETIC] Cargo van spotted at multiple seizure locations.",
+            "risk_score": 55.0,
+            "status": EntityStatus.active,
+            "aliases": [],
+            "metadata_": {"plate": "SYN-4821"},
+            "first_seen": _ago(days=120),
+            "last_seen": _ago(days=8),
+        },
+        {
+            "name": "Burner Phone +1-555-0147",
+            "entity_type": EntityType.phone,
+            "description": "[SYNTHETIC] Prepaid device linked to encrypted communications.",
+            "risk_score": 60.0,
+            "status": EntityStatus.active,
+            "aliases": [],
+            "metadata_": {},
+            "first_seen": _ago(days=60),
+            "last_seen": _ago(days=4),
+        },
+        {
+            "name": "Warehouse District — Port Ficticio",
+            "entity_type": EntityType.location,
+            "description": "[SYNTHETIC] Industrial zone near port.",
+            "risk_score": 72.0,
+            "status": EntityStatus.active,
+            "aliases": ["Zona Industrial PF"],
+            "metadata_": {},
+            "first_seen": _ago(days=300),
+            "last_seen": _ago(days=6),
+        },
+        {
+            "name": "Safe House — Colonia Verde",
+            "entity_type": EntityType.location,
+            "description": "[SYNTHETIC] Residential property used as coordination point.",
+            "risk_score": 68.0,
+            "status": EntityStatus.active,
+            "aliases": [],
+            "metadata_": {},
+            "first_seen": _ago(days=180),
+            "last_seen": _ago(days=12),
+        },
+        {
+            "name": "Offshore Account — SYNBANK-7743",
+            "entity_type": EntityType.financial_account,
+            "description": "[SYNTHETIC] Offshore bank account receiving wire transfers.",
+            "risk_score": 82.0,
+            "status": EntityStatus.under_investigation,
+            "aliases": ["SYNBANK-7743"],
+            "metadata_": {},
+            "first_seen": _ago(days=350),
+            "last_seen": _ago(days=20),
+        },
+        {
+            "name": "Crypto Wallet — 0xSYN...DEMO",
+            "entity_type": EntityType.financial_account,
+            "description": "[SYNTHETIC] Cryptocurrency wallet used for layering transactions.",
+            "risk_score": 75.0,
+            "status": EntityStatus.active,
+            "aliases": ["0xSYNDEMO"],
+            "metadata_": {},
+            "first_seen": _ago(days=150),
+            "last_seen": _ago(days=3),
+        },
     ]
+
+    # Dynamically generate additional structured entities up to 140
+    sectors = [f"S{i:02d}" for i in range(1, 13)]
+    first_names = ["Alejandro", "Beatriz", "Camilo", "Dalia", "Ernesto", "Fabiola", "Gabriel", "Helena", "Ignacio", "Juana", "Kevin", "Lucia", "Mateo", "Nadia", "Orlando", "Paola", "Quentin", "Renata", "Santiago", "Teresa"]
+    last_names = ["Alvarez", "Benitez", "Cordero", "Dominguez", "Escobar", "Fernandez", "Gomez", "Hernandez", "Ibarra", "Jimenez", "Lopez", "Mendoza", "Navarro", "Ortiz", "Perez", "Quintana", "Ramirez", "Silva", "Torres", "Vargas"]
+    org_suffixes = ["Logistics", "Holdings", "Imports", "Maritime", "Distribution", "Chemicals", "Ventures", "Capital", "Group", "Solutions"]
+    vehicle_types = ["Cargo Van", "Pickup Truck", "Container Truck", "Sedan", "Speedboat", "Trailer"]
+
+    # 1. Add 45 Persons
+    for i in range(1, 46):
+        fn = first_names[i % len(first_names)]
+        ln = last_names[(i * 3) % len(last_names)]
+        entities_data.append({
+            "name": f"{fn} {ln}",
+            "entity_type": EntityType.person,
+            "description": f"[SYNTHETIC] Tracked individual associated with narcotics distribution cluster {i}.",
+            "risk_score": float(35 + (i * 7) % 60),
+            "status": EntityStatus.active if i % 4 != 0 else EntityStatus.under_investigation,
+            "aliases": [f"Alias-{fn[0]}{ln[0]}"],
+            "metadata_": {"sector_id": sectors[i % 12]},
+            "first_seen": _ago(days=100 + i * 5),
+            "last_seen": _ago(days=1 + i % 10),
+        })
+
+    # 2. Add 35 Vehicles
+    for i in range(1, 36):
+        vt = vehicle_types[i % len(vehicle_types)]
+        entities_data.append({
+            "name": f"{vt} — SYN-{(4000 + i*13)}",
+            "entity_type": EntityType.vehicle,
+            "description": f"[SYNTHETIC] Commercial transport vehicle monitored in Sector S{(i % 12 + 1):02d}.",
+            "risk_score": float(40 + (i * 11) % 55),
+            "status": EntityStatus.active,
+            "aliases": [f"PLATE-SYN-{(4000 + i*13)}"],
+            "metadata_": {"sector_id": sectors[i % 12]},
+            "first_seen": _ago(days=50 + i * 3),
+            "last_seen": _ago(days=i % 7),
+        })
+
+    # 3. Add 25 Locations
+    for i in range(1, 26):
+        entities_data.append({
+            "name": f"Facility S{(i % 12 + 1):02d}-{(100 + i)}",
+            "entity_type": EntityType.location,
+            "description": f"[SYNTHETIC] Staging facility / warehouse in Sector S{(i % 12 + 1):02d}.",
+            "risk_score": float(45 + (i * 9) % 50),
+            "status": EntityStatus.active,
+            "aliases": [f"LOC-{(100 + i)}"],
+            "metadata_": {"sector_id": sectors[i % 12]},
+            "first_seen": _ago(days=200 + i * 4),
+            "last_seen": _ago(days=i % 14),
+        })
+
+    # 4. Add 18 Organizations
+    for i in range(1, 19):
+        suf = org_suffixes[i % len(org_suffixes)]
+        entities_data.append({
+            "name": f"Apex {suf} Corp {i}",
+            "entity_type": EntityType.organization,
+            "description": f"[SYNTHETIC] Commercial entity registered in Sector S{(i % 12 + 1):02d}.",
+            "risk_score": float(50 + (i * 5) % 48),
+            "status": EntityStatus.under_investigation if i % 3 == 0 else EntityStatus.active,
+            "aliases": [f"APEX-{i}"],
+            "metadata_": {"sector_id": sectors[i % 12]},
+            "first_seen": _ago(days=300 + i * 8),
+            "last_seen": _ago(days=i % 12),
+        })
+
+    # 5. Add 15 Financial Accounts
+    for i in range(1, 16):
+        entities_data.append({
+            "name": f"Account SYNBANK-{(8000 + i)}",
+            "entity_type": EntityType.financial_account,
+            "description": f"[SYNTHETIC] Financial ledger account with unusual transfer patterns in Sector S{(i % 12 + 1):02d}.",
+            "risk_score": float(60 + (i * 7) % 38),
+            "status": EntityStatus.active,
+            "aliases": [f"ACC-{(8000 + i)}"],
+            "metadata_": {"sector_id": sectors[i % 12]},
+            "first_seen": _ago(days=150 + i * 6),
+            "last_seen": _ago(days=i % 5),
+        })
 
     result: dict[str, Entity] = {}
     for data in entities_data:
@@ -234,73 +310,61 @@ def _create_entities(db: Session) -> dict[str, Entity]:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _create_relationships(db: Session, entities: dict[str, Entity]) -> list[Relationship]:
-    """Create ~20 relationships forming a realistic network topology."""
-    e = entities  # shorthand
+    """Create ~180 relationships forming a dense, realistic network graph topology."""
+    entity_list = list(entities.values())
+    rels: list[Relationship] = []
 
-    rels_data = [
-        # Command structure
-        (e["Carlos 'El Fantasma' Reyes"], e["Corredor Occidental Cartel"], RelationshipType.command, 0.95,
-         "Leader of the organization per multiple HUMINT sources."),
-        (e["Carlos 'El Fantasma' Reyes"], e["Maria Santos Delgado"], RelationshipType.command, 0.80,
-         "Direct reports seen in intercepted encrypted messages."),
-        (e["Carlos 'El Fantasma' Reyes"], e["Diego Fuentes"], RelationshipType.command, 0.65,
-         "Indirect command through intermediaries."),
-        # Associates
-        (e["Maria Santos Delgado"], e["Diego Fuentes"], RelationshipType.associate, 0.70,
-         "Frequent co-location at logistics hubs."),
-        (e["Diego Fuentes"], e["White Cargo Van — SYN-4821"], RelationshipType.logistics, 0.85,
-         "Vehicle registered under alias linked to Fuentes."),
-        (e["Maria Santos Delgado"], e["Warehouse District — Port Ficticio"], RelationshipType.logistics, 0.75,
-         "Surveillance footage at warehouse on 5 occasions."),
-        # Financial
-        (e["Viktor Petrov"], e["Solaris Trading Group"], RelationshipType.financial, 0.90,
-         "CFO of Solaris TG per corporate filings."),
-        (e["Solaris Trading Group"], e["Offshore Account — SYNBANK-7743"], RelationshipType.financial, 0.92,
-         "Wire transfers totaling $2.3M over 18 months."),
-        (e["Viktor Petrov"], e["Offshore Account — SYNBANK-7743"], RelationshipType.financial, 0.88,
-         "Signatory on account. Multiple cash deposits."),
-        (e["Rosa Medina Castillo"], e["Solaris Trading Group"], RelationshipType.financial, 0.80,
-         "Employed as senior accountant since founding."),
-        (e["Solaris Trading Group"], e["Crypto Wallet — 0xSYN...DEMO"], RelationshipType.financial, 0.65,
-         "On-chain analysis links wallet to STG controlled addresses."),
-        # Communications
-        (e["Carlos 'El Fantasma' Reyes"], e["Burner Phone +1-555-0147"], RelationshipType.communication, 0.85,
-         "Phone attributed to El Fantasma via voice analysis."),
-        (e["Burner Phone +1-555-0147"], e["Solaris Trading Group"], RelationshipType.communication, 0.60,
-         "Calls to Solaris TG office from this device."),
-        (e["Yuki Tanaka"], e["Maria Santos Delgado"], RelationshipType.associate, 0.55,
-         "Email exchanges regarding 'chemical supplies'."),
-        # Supply chain
-        (e["Yuki Tanaka"], e["Corredor Occidental Cartel"], RelationshipType.logistics, 0.70,
-         "Precursor chemicals sourced and shipped to COC labs."),
-        (e["Corredor Occidental Cartel"], e["Warehouse District — Port Ficticio"], RelationshipType.logistics, 0.90,
-         "Primary staging area for western corridor shipments."),
-        (e["Maria Santos Delgado"], e["Safe House — Colonia Verde"], RelationshipType.logistics, 0.72,
-         "Utility records and surveillance confirm regular visits."),
-        # Family
-        (e["Diego Fuentes"], e["Rosa Medina Castillo"], RelationshipType.family, 0.95,
-         "Siblings per civil records."),
-        # Former associate
-        (e["James 'Jimmy' O'Brien"], e["Carlos 'El Fantasma' Reyes"], RelationshipType.associate, 0.30,
-         "Former associate, now cooperating witness. Relationship severed."),
-        (e["James 'Jimmy' O'Brien"], e["Viktor Petrov"], RelationshipType.financial, 0.25,
-         "Historical financial connection, no longer active."),
+    rel_types = [
+        RelationshipType.associate,
+        RelationshipType.financial,
+        RelationshipType.logistics,
+        RelationshipType.communication,
+        RelationshipType.command,
+        RelationshipType.family,
     ]
 
-    rels: list[Relationship] = []
-    for source, target, rel_type, strength, evidence in rels_data:
+    # 1. Connect anchor entities
+    anchor_leader = entities.get("Carlos 'El Fantasma' Reyes")
+    cartel_org = entities.get("Corredor Occidental Cartel")
+    if anchor_leader and cartel_org:
         rel = Relationship(
             id=str(uuid.uuid4()),
-            source_entity_id=source.id,
-            target_entity_id=target.id,
-            relationship_type=rel_type,
-            strength=strength,
-            evidence_summary=f"[SYNTHETIC] {evidence}",
-            first_observed=_ago(days=int(365 * strength)),
-            last_observed=_ago(days=int(30 * (1 - strength))),
+            source_entity_id=anchor_leader.id,
+            target_entity_id=cartel_org.id,
+            relationship_type=RelationshipType.command,
+            strength=0.95,
+            evidence_summary="[SYNTHETIC] Command leadership of Corredor Occidental Cartel.",
+            first_observed=_ago(days=500),
+            last_observed=_ago(days=1),
         )
         db.add(rel)
         rels.append(rel)
+
+    # 2. Build interconnected hub-and-spoke graph across 140 entities (~180 edges)
+    num_entities = len(entity_list)
+    for i in range(num_entities):
+        # Connect each node to 1-3 other nodes
+        num_connections = (i % 3) + 1
+        for c in range(num_connections):
+            target_idx = (i + c*7 + 1) % num_entities
+            if target_idx != i:
+                src_ent = entity_list[i]
+                tgt_ent = entity_list[target_idx]
+                r_type = rel_types[(i + c) % len(rel_types)]
+                strength = round(0.3 + (i * 13 + c * 7) % 65 / 100.0, 2)
+                rel = Relationship(
+                    id=str(uuid.uuid4()),
+                    source_entity_id=src_ent.id,
+                    target_entity_id=tgt_ent.id,
+                    relationship_type=r_type,
+                    strength=strength,
+                    evidence_summary=f"[SYNTHETIC] Observed {r_type.value} link between {src_ent.name} and {tgt_ent.name}.",
+                    first_observed=_ago(days=int(300 * strength)),
+                    last_observed=_ago(days=int(30 * (1 - strength))),
+                )
+                db.add(rel)
+                rels.append(rel)
+
     db.flush()
     return rels
 

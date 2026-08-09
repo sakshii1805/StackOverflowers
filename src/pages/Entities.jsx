@@ -1,12 +1,29 @@
 // src/pages/Entities.jsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Search, Users } from "lucide-react";
+import { getEntities } from "../lib/api";
 import {
-  ENTITIES,
+  ENTITIES as fallbackEntities,
   getSectorById,
   getRelationshipsForEntity,
   getOsintMentionsForEntity,
 } from "../lib/mockData";
+
+function normalizeEntity(entity) {
+  return {
+    ...entity,
+    id: entity.id ?? entity.rawId ?? String(entity.id),
+    rawId: entity.rawId ?? entity.id ?? String(entity.id),
+    label: entity.label ?? entity.name ?? String(entity.id),
+    type: entity.type ?? entity.entity_type ?? "unknown",
+    riskIndicator: Number(entity.riskIndicator ?? entity.risk_score ?? 0),
+    sectorId: entity.sectorId ?? entity.sector_id ?? null,
+    connections: entity.connections ?? 0,
+    events: entity.events ?? [],
+    locations: entity.locations ?? 0,
+    createdAt: entity.createdAt ?? entity.created_at ?? null,
+  };
+}
 
 const TYPES = ["person", "vehicle", "location", "shipment", "organization"];
 
@@ -26,23 +43,40 @@ export default function Entities() {
   const [typeFilter, setTypeFilter] = useState(null);
   const [sortKey, setSortKey] = useState("risk");
   const [selectedId, setSelectedId] = useState(null);
+  const [entitiesData, setEntitiesData] = useState(fallbackEntities);
+
+  const fetchEntities = () => {
+    getEntities().then((data) => {
+      if (Array.isArray(data)) setEntitiesData(data.map(normalizeEntity));
+    });
+  };
+
+  useEffect(() => {
+    fetchEntities();
+    window.addEventListener("narcoscope_data_updated", fetchEntities);
+    return () => {
+      window.removeEventListener("narcoscope_data_updated", fetchEntities);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
-    let list = ENTITIES;
-    if (typeFilter) list = list.filter((e) => e.type === typeFilter);
+    let list = entitiesData;
+    if (typeFilter) list = list.filter((e) => (e.type || e.entity_type) === typeFilter);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       list = list.filter(
-        (e) => e.label.toLowerCase().includes(q) || e.id.toLowerCase().includes(q)
+        (e) => (e.label || e.name || "").toLowerCase().includes(q) || e.id.toLowerCase().includes(q)
       );
     }
     const sorted = [...list].sort((a, b) =>
-      sortKey === "risk" ? b.riskIndicator - a.riskIndicator : b.connections - a.connections
+      sortKey === "risk"
+        ? (b.riskIndicator ?? b.risk_score ?? 0) - (a.riskIndicator ?? a.risk_score ?? 0)
+        : (b.connections ?? 0) - (a.connections ?? 0)
     );
     return sorted;
-  }, [query, typeFilter, sortKey]);
+  }, [entitiesData, typeFilter, query, sortKey]);
 
-  const selected = ENTITIES.find((e) => e.id === selectedId) ?? null;
+  const selected = entitiesData.find((e) => e.id === selectedId) ?? null;
 
   return (
     <div className="flex gap-4 h-[calc(100vh-140px)]">
@@ -53,7 +87,7 @@ export default function Entities() {
             <Users size={13} /> Entities
           </div>
           <span className="text-[11px] text-text-faint font-mono">
-            {filtered.length} of {ENTITIES.length}
+            {filtered.length} of {entitiesData.length}
           </span>
         </div>
 

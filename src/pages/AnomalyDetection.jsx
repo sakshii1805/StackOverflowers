@@ -1,8 +1,8 @@
-// src/pages/AnomalyDetection.jsx
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { AlertTriangle, ArrowUpDown } from "lucide-react";
-import { ANOMALIES, getSectorById } from "../lib/mockData";
+import { getAnomalies } from "../lib/api";
+import { ANOMALIES as fallbackAnomalies, getSectorById } from "../lib/mockData";
 
 const SEVERITY_STYLES = {
   critical: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -19,7 +19,7 @@ const SEVERITY_GLOW = {
 };
 
 const SORT_KEYS = {
-  sector: (a) => getSectorById(a.sectorId).name,
+  sector: (a) => getSectorById(a.sectorId)?.name || a.sectorId,
   deviation: (a) => a.deviationPct,
   severity: (a) => a.severity,
 };
@@ -28,11 +28,26 @@ export default function AnomalyDetection() {
   const [hoveredId, setHoveredId] = useState(null);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState("desc");
+  const [anomaliesData, setAnomaliesData] = useState(fallbackAnomalies);
+
+  const fetchAnomalies = () => {
+    getAnomalies().then((data) => {
+      if (Array.isArray(data)) setAnomaliesData(data);
+    });
+  };
+
+  useEffect(() => {
+    fetchAnomalies();
+    window.addEventListener("narcoscope_data_updated", fetchAnomalies);
+    return () => {
+      window.removeEventListener("narcoscope_data_updated", fetchAnomalies);
+    };
+  }, []);
 
   const sortedAnomalies = useMemo(() => {
-    if (!sortKey) return ANOMALIES;
+    if (!sortKey) return anomaliesData;
     const getVal = SORT_KEYS[sortKey];
-    const sorted = [...ANOMALIES].sort((a, b) => {
+    const sorted = [...anomaliesData].sort((a, b) => {
       const av = getVal(a);
       const bv = getVal(b);
       if (av < bv) return -1;
@@ -40,7 +55,7 @@ export default function AnomalyDetection() {
       return 0;
     });
     return sortDir === "desc" ? sorted.reverse() : sorted;
-  }, [sortKey, sortDir]);
+  }, [anomaliesData, sortKey, sortDir]);
 
   const toggleSort = (key) => {
     if (sortKey === key) {
@@ -55,9 +70,9 @@ export default function AnomalyDetection() {
     <div className="flex flex-col gap-6">
       {/* Anomaly cards with sparklines */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {ANOMALIES.map((a) => {
+        {anomaliesData.map((a) => {
           const sector = getSectorById(a.sectorId);
-          const sparkData = sector.trend.map((v, i) => ({ i, v }));
+          const sparkData = sector?.trend?.map((v, i) => ({ i, v })) ?? [];
           const isHovered = hoveredId === a.id;
           return (
             <div

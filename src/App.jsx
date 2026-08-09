@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
+import { runIngestion } from "./lib/api";
 
 import Dashboard from "./pages/Dashboard";
 import NetworkIntelligence from "./pages/NetworkIntelligence";
@@ -11,7 +13,7 @@ import Alerts from "./pages/Alerts";
 import Entities from "./pages/Entities";
 import Investigations from "./pages/Investigations";
 import Reports from "./pages/Reports";
-import SettingsPage from "./pages/Settings";
+import Settings from "./pages/Settings";
 
 function PageShell({ title, subtitle, children }) {
   return (
@@ -23,6 +25,41 @@ function PageShell({ title, subtitle, children }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    const getIntervalMs = () => {
+      const rate = localStorage.getItem("narcoscope_refresh_rate") || "30 seconds";
+      switch (rate) {
+        case "Real-time":
+          return 10000;
+        case "30 seconds":
+          return 30000;
+        case "1 minute":
+          return 60000;
+        case "5 minutes":
+          return 300000;
+        default:
+          return 30000;
+      }
+    };
+
+    let timer = setInterval(() => {
+      runIngestion();
+    }, getIntervalMs());
+
+    const handleSettingsUpdate = () => {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        runIngestion();
+      }, getIntervalMs());
+    };
+
+    window.addEventListener("narcoscope_settings_updated", handleSettingsUpdate);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("narcoscope_settings_updated", handleSettingsUpdate);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <div className="flex h-screen bg-bg text-text">
@@ -104,7 +141,7 @@ export default function App() {
             path="/settings"
             element={
               <PageShell title="Settings">
-                <SettingsPage />
+                <Settings />
               </PageShell>
             }
           />

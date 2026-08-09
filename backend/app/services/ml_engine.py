@@ -45,7 +45,7 @@ def detect_anomalies_isolation_forest(sector_metrics: list[dict[str, Any]]) -> l
 
     results = []
     for idx, item in enumerate(sector_metrics):
-      is_anomaly = predictions[idx] == -1
+      is_anomaly = bool(predictions[idx] == -1)
       ml_score = float(np.round(1.0 - (decision_scores[idx] + 0.5), 2))
       ml_score = max(0.05, min(0.98, ml_score))
 
